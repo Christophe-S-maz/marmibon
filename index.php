@@ -31,7 +31,7 @@
         </select>
     
         <label style="margin-left: 20px;">Régime Alimentaire</label>
-        <select name ="regime alimentaire" id = "regimeSelect">
+        <select name ="regime-alimentaire" id = "regimeSelect">
             <option value="">Choisissez un régime alimentaire</option>
             <option value="omnivore">Aucune restriction</option>
             <option value="vegetarien">vegetarien</option>
@@ -45,36 +45,63 @@
     <?php
         require("requetePDO.php");
 
-        if(isset($_GET['repas']) && !empty($_GET['repas'])){
-
-            $nom = $_GET['repas'];
-
-            $sql = "SELECT recettes.nom, recettes.note FROM recettes JOIN repas ON recettes.id_repas = repas.id_repas WHERE repas.nom = '$nom'" ;
-
-            $stmt = $pdo->query($sql);
-
-            if($stmt->rowCount()>0){
-                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                echo "Nom de la recette : " . $row['nom'] . " - Note  : " . $row['note']."/10 <br>";
-                }
-            }
+        if((isset($_GET['repas']) && !empty($_GET['repas'])) && (isset($_GET['regime-alimentaire']) && !empty($_GET['regime-alimentaire']))){
 
         }
+        else{
+            if(isset($_GET['repas']) && !empty($_GET['repas'])){
 
-        if(isset($_GET['regime alimentaire']) && !empty($_GET['regime alimentaire'])){
+                $nom = $_GET['repas'];
 
-            $nom = $_GET['regime alimentaire'];
+                $sql = "SELECT recettes.nom, recettes.note FROM recettes JOIN repas ON recettes.id_repas = repas.id_repas WHERE repas.nom = '$nom'" ;
 
-            $sql = "SELECT recettes.nom, recettes.note FROM recettes JOIN repas ON recettes.id_repas = repas.id_repas WHERE repas.nom = '$nom'" ;
+                $stmt = $pdo->query($sql);
 
-            $stmt = $pdo->query($sql);
-
-            if($stmt->rowCount()>0){
-                while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-                echo "Nom de la recette : " . $row['nom'] . " - Note  : " . $row['note']."/10 <br>";
+                if($stmt->rowCount()>0){
+                    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                    echo  $row['nom'] . " - Note  : " . $row['note']."/10 <br>";
+                    }
                 }
-            }
 
+            } else 
+                if(isset($_GET['regime-alimentaire']) && !empty($_GET['regime-alimentaire'])){
+
+                $nom = $_GET['regime-alimentaire'];
+
+                if($nom == "omnivore"){
+                    $sql = "SELECT recettes.nom, recettes.note
+                            FROM recettes
+                            ";
+                } else {
+                    $sql = "SELECT recettes.nom, recettes.note
+                            FROM recettes                       
+                            WHERE recettes.id_recette NOT IN (
+                                                        SELECT recettes.id_recette
+                                                        FROM recettes
+                                                        JOIN ingredients_recettes
+                                                        ON recettes.id_recette = ingredients_recettes.id_recette
+                                                        JOIN ingredients
+                                                        ON ingredients_recettes.id_ingredient = ingredients.id_ingredient
+                                                        JOIN ingredients_regimes
+                                                        ON ingredients.id_ingredient = ingredients_regimes.id_ingredient
+                                                        JOIN regimes_alimentaire
+                                                        ON ingredients_regimes.id_regime = regimes_alimentaire.id_regime
+                                                        WHERE regimes_alimentaire.nom IN ('omnivore')
+                                                        )   
+                            ";
+                }
+
+                
+
+                $stmt = $pdo->query($sql);
+
+                if($stmt->rowCount()>0){
+                    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                    echo  $row['nom'] . " - Note  : " . $row['note']."/10 <br>";
+                    }
+                }
+
+            }
         }
 
         // $sql = "SELECT * FROM ingredients";
